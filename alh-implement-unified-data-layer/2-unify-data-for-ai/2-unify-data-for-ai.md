@@ -2,9 +2,10 @@
 
 ## Introduction
 
-Lab 1 established a trusted foundation for structured data. In this lab, you extend that foundation to AI applications by combining Gold business context with searchable document evidence. Gold data products make project facts easy to consume, but applications and agents also need detailed evidence from contracts, specifications, inspection reports, and compliance documents. You will explore how Oracle Autonomous AI Lakehouse keeps structured facts and unstructured document evidence governed together, then use semantic search to find engineering-specification content relevant to the Austin project.
+Lab 1 established a trusted foundation for structured data. In this lab, you extend that foundation to AI applications by combining Gold business context with searchable document evidence.
+Gold consumer-ready data sets make trusted project facts easier for applications and AI to consume, but applications and agents also need detailed evidence from contracts, specifications, inspection reports, and compliance documents. You will explore how Oracle Autonomous AI Lakehouse keeps structured facts and unstructured document evidence governed together, then use semantic search to find engineering-specification content relevant to the Austin project.
 
-The workshop setup has already created the relationship projection, document relationships, chunks, embeddings, and vector index inside ALH. Your task is to inspect and use these prepared assets; you do not need to create them. No data is changed in this lab.
+The workshop setup has already created the document relationships, chunks, embeddings, and vector index inside ALH. Your task is to inspect and use these prepared assets; you do not need to create them. No data is changed in this lab.
 
 **Estimated Time:** 20 minutes
 
@@ -12,11 +13,12 @@ The workshop setup has already created the relationship projection, document rel
 
 In this lab, you will:
 
-- Use Data Studio Catalog to inspect the Gold products intended for applications and agents.
-- Compare relational, JSON, relationship-projection, and vector representations.
-- Review how project documents were prepared for semantic retrieval.
-- Run a vector search for Austin structural specifications.
-- Combine retrieved evidence with structured project context and provenance.
+* Inspect the Gold consumer-ready data sets and document evidence intended for applications and agents.
+* Compare relational, JSON, and relationship representations of governed data.
+* Review how source documents are prepared for semantic retrieval.
+* Use vector search to find Austin engineering evidence by meaning.
+* Combine retrieved document evidence with structured project context.
+* Trace the retrieved evidence back to its governed source object and version.
 
 ### Prerequisites
 
@@ -25,33 +27,51 @@ In this lab, you will:
 - The `SEER_WORKSHOP.ALL_MINILM_L12_V2` embedding model loaded in the database
 - Precomputed embeddings and a valid vector index on `SEER_GOLD.DOCUMENT_CHUNKS`
 
-## Task 1: Inspect the consumer-ready Gold products
+## Task 1: Inspect the consumer-ready Gold data sets
 
 Applications and agents should consume stable, business-oriented data products rather than reconstructing joins across raw source systems. In this task, you will inspect the Gold products available to the downstream Construction Evaluation Agent.
 
-1. From the Database Actions Launchpad, select **Data Load**. In the Data Studio left pane, select **Catalog**.
+1. From the Database Actions Launchpad, select **Data Studio**, then select **Catalog**.
 
-2. Confirm that `LOCAL` is selected. Select the `LOCAL` schema selector, replace the current schema with `SEER_GOLD`, and select **Apply**. Search for `DATA_PRODUCT_CATALOG`.
+    ![catalog](images/select-catalog.png)
 
-3. Open `SEER_GOLD.DATA_PRODUCT_CATALOG` and select **Preview**. Review each product's business purpose, owner, refresh frequency, quality status, and intended consumers. `DATA_PRODUCT_CATALOG` is a business-facing register of approved data products; it helps a team understand what is available, who owns it, and whether it is suitable for a particular consumer.
+2. Confirm that **LOCAL** is the selected catalog. In the **LOCAL** schema selector, replace the current schema with `SEER_GOLD`, then select **Apply**. Search for `DATA_PRODUCT_CATALOG`.
 
-4. Locate the three products that align to the downstream Construction Evaluation Agent:
+    ![local](images/select-local.png)
+    ![gold](images/select-gold-schema.png)
+    ![data product](images/select-data-product-catalog.png)
 
+3. Open `SEER_GOLD.DATA_PRODUCT_CATALOG` and select **Preview**. Review each data set’s business purpose, owner, refresh frequency, quality status, and intended consumers. `DATA_PRODUCT_CATALOG` is a business-facing register of approved data products. It helps a team understand which products are available, who owns them, and whether they are suitable for a particular consumer.
+
+4. Locate the consumer-ready assets used by the Construction Evaluation Agent:
+
+    Structured data sets:
     - `PROJECT_CONTEXT`
     - `SUPPLIER_RECOMMENDATIONS`
     - `SUPPLIER_PROFILE`
 
-5. Return to the Catalog results, search for `SUPPLIER_RECOMMENDATIONS`, and open `SEER_GOLD.SUPPLIER_RECOMMENDATIONS`.
+    Searchable document evidence:
+    - `DOCUMENT_CHUNKS`
 
-6. Use **Preview** to inspect the project, supplier, fit score, risk level, recommendation status, and missing-information fields. Use **Columns** to review the entity's columns and data types.
+    ![data product](images/preview-data-product-catalog.png)
 
-7. Notice that the product exposes a stable decision-support contract. An application can consume recommendation and risk information directly without needing to understand raw ingestion fields or reconstruct source-system joins.
+5. Select **Close** to return to the Catalog search results. Search for `SUPPLIER_RECOMMENDATIONS`, then open `SEER_GOLD.SUPPLIER_RECOMMENDATIONS`.
+
+    ![supplier recs](images/supplier-recommendations.png)
+
+6. Use **Preview** to inspect the project, supplier, fit score, risk level, recommendation status, and missing-information fields. Notice that `SUPPLIER_RECOMMENDATIONS` is a prepared, consumer-ready data set. It provides a stable decision-support structure without exposing raw ingestion fields or requiring an application to reconstruct the source joins.
+
+    ![supplier recs](images/preview-supplier-recommendations.png)
 
 ## Task 2: Compare the data shapes
 
 The same governed business data can be exposed through different data shapes without creating separate, unsynchronized copies. In this task, you will inspect relational facts, flexible JSON attributes, and entity relationships.
 
-1. Query relational project facts:
+1. From the current Catalog entity page, select **Close**. Return to the Database Actions Launchpad, select **SQL** under **Development** to open the SQL Worksheet.
+
+    ![sql](images/return-to-sql.png)
+
+2. Run the following query to view relational project facts for Austin:
 
     ```sql
     <copy>
@@ -60,10 +80,12 @@ The same governed business data can be exposed through different data shapes wit
     WHERE UPPER(project_name) LIKE '%AUSTIN%';
     </copy>
     ```
+    
+    ![austin project](images/austin-project.png)
 
     This relational result provides a simple, tabular view of the project, asset, schedule milestone, and inspection status. It is well suited to reports, dashboards, and application queries.
 
-2. Inspect flexible attributes stored as JSON:
+3. Run the following query to inspect flexible asset attributes stored as JSON:
 
     ```sql
     <copy>
@@ -79,11 +101,11 @@ The same governed business data can be exposed through different data shapes wit
     </copy>
     ```
 
-      `SPECIFICATIONS` stores flexible technical attributes as a JSON document. `JSON_VALUE` retrieves individual attributes from that document as queryable columns, allowing the model to evolve without a new relational column for every possible specification attribute.
+    `SPECIFICATIONS` stores flexible technical attributes as a JSON document. `JSON_VALUE` retrieves individual attributes from that document as queryable columns. This lets the model evolve without requiring a new relational column for every possible specification attribute.
 
-      ![JSON asset attributes](images/json-attributes.png "JSON asset attributes")
+    ![JSON asset attributes](images/json-attributes.png "JSON asset attributes")
 
-3. Explore the prebuilt relationship projection:
+4. Run the following query to explore the prebuilt relationship projection
 
     ```sql
     <copy>
@@ -98,7 +120,7 @@ The same governed business data can be exposed through different data shapes wit
     </copy>
     ```
 
-  4. This result describes how governed entities are related, such as a project to an asset or an asset to another business object. The relationship projection can support graph-style application queries without requiring the learner to create graph definitions in this workshop.
+    This result describes how governed entities are related, such as a project to an asset or an asset to another business object. The relationship projection can support graph-style application queries without requiring the learner to create graph definitions in this workshop.
 
       ![Relationship projection](images/relationship-projection.png "Relationship projection")
 
@@ -106,13 +128,24 @@ The same governed business data can be exposed through different data shapes wit
 
 Before an AI application can retrieve document evidence reliably, each source document must be registered, processed into meaningful chunks, enriched with metadata, embedded, and indexed.
 
-1. Return to the **Catalog** item in the Data Studio left pane. Select the `LOCAL` schema selector, choose `SEER_GOLD`, and select **Apply**. Search for `DOCUMENT_CATALOG`.
+1. Return to the Database Actions Launchpad, select **Catalog** under **Data Studio**. In the **LOCAL** schema selector, select `SEER_GOLD`, then select **Apply**. Search for `DOCUMENT_CATALOG`.
 
-2. Open `SEER_GOLD.DOCUMENT_CATALOG` and select **Preview**. Locate each document's name, type, project, asset, version, Object Storage URI, and classification. Use **Columns** to inspect the registered metadata contract. `DOCUMENT_CATALOG` describes each original document and preserves its source and business context.
+    ![catalog](images/select-catalog.png)
+    ![local](images/select-local.png)
+    ![gold](images/select-gold-schema.png)
+    ![document](images/document-catalog.png)
 
-3. Return to the Catalog results, search for `DOCUMENT_CHUNKS`, and open `SEER_GOLD.DOCUMENT_CHUNKS`. Preview the entity and inspect its column definitions and statistics. Locate the chunk sequence, page and section metadata, embedding model, embedding status, and source identifiers. A chunk is a meaningful document section or passage that retains the metadata needed to retrieve it, connect it to the right project or asset, and trace it to its source document.
+2. Open `SEER_GOLD.DOCUMENT_CATALOG` and select **Preview**. Locate each document's name, type, project, asset, version, Object Storage URI, and classification. Select **Columns** to inspect the registered metadata contract.
 
-4. Return to the SQL worksheet and inspect the prepared chunks for the Austin project:
+    ![preview](images/document-preview.png)
+    ![columns](images/document-columns.png)
+
+3. Select **Close** to return to the Catalog results. Search for `DOCUMENT_CHUNKS`, then open `SEER_GOLD.DOCUMENT_CHUNKS`. Select **Preview**, inspect the column definitions and statistics, and locate the chunk sequence, page and section metadata, embedding model, embedding status, and source identifiers. A chunk is a meaningful section of a document, such as a section or passage. Each chunk retains the metadata needed to retrieve it, connect it to the right project or asset, and trace it to the source document.
+
+    ![chunks](images/document-chunks.png)
+    ![chunks](images/preview-document-chunks.png)
+
+4. Select **Close** to exit the DOCUMENT_CHUNKS table view. Return to the Database Actions Launchpad, select **SQL** under **Development** to open the SQL Worksheet, and run the following query to inspect prepared chunks for the Austin project:
 
     ```sql
     <copy>
@@ -128,22 +161,28 @@ Before an AI application can retrieve document evidence reliably, each source do
     </copy>
     ```
 
+    ![sql](images/return-to-sql.png)
+
+    Confirm that the Austin documents have been divided into ordered chunks and that their embeddings have been generated successfully.
+
+    ![austin](images/austin-project-2.png)
+
 5. Review the preparation stages:
 
-    1. Register the original Object Storage object and version.
-    2. Extract text while retaining page and section boundaries.
-    3. Create chunks sized for coherent retrieval.
-    4. Attach project, asset, supplier, classification, and provenance metadata.
-    5. Generate embeddings inside the Oracle security boundary.
-    6. Build or refresh the vector index.
+    * Register the original Object Storage object and version.
+    * Extract text while retaining page and section boundaries.
+    * Create chunks sized for coherent retrieval.
+    * Attach project, asset, supplier, classification, and provenance metadata.
+    * Generate embeddings inside the Oracle security boundary.
+    * Build or refresh the vector index.
 
-6. Chunking is a data-quality decision. A technically valid embedding can still produce poor results when chunks omit headings, combine unrelated topics, or lose source metadata.
+    Chunking is a data-quality decision. An embedding can be technically valid but still produce poor retrieval if its chunk omits a heading, combines unrelated topics, or loses source metadata.
 
 ## Task 4: Search for Austin structural specifications
 
-Semantic search finds content with similar meaning, not only content containing the exact search phrase. The query converts the search phrase into an embedding and compares it with stored document-chunk embeddings. A lower `SEMANTIC_DISTANCE` means a closer semantic match.
+Semantic search finds content with similar meaning, not only content containing the exact search phrase. In this task, the query converts the search phrase into an embedding and compares it with the stored document-chunk embeddings. A lower `SEMANTIC_DISTANCE` means a closer semantic match.
 
-1. Run a semantic search using the workshop's in-database embedding model:
+1. In the SQL Worksheet, run the following semantic-search query:
 
     ```sql
     <copy>
@@ -166,11 +205,11 @@ Semantic search finds content with similar meaning, not only content containing 
     </copy>
     ```
 
-2. Confirm that a section from an Austin engineering specification ranks near the top even if it does not repeat the exact search phrase.
+    ![Semantic-search results](images/semantic-search.png "Semantic-search results")
 
-    ![Semantic-search results](images/semantic-search-results.png "Semantic-search results")
+2. Review the results. Confirm that an Austin engineering-specification section ranks near the top, even if the chunk does not repeat the exact phrase Austin structural specifications.
 
-3. Record the document name, section, page number, and distance for the best result.
+3. Record the document name, section title, page number, and semantic distance for the best result. You will use the document name later to verify provenance.
 
 4. Compare semantic retrieval with a simple keyword filter:
 
@@ -182,15 +221,15 @@ Semantic search finds content with similar meaning, not only content containing 
     </copy>
     ```
 
-  5. Semantic search finds related meaning; keyword search finds exact text. Production retrieval may combine both approaches when exact project codes or contractual terms matter.
+    ![Semantic-search results](images/compare-semantic-search.png "Semantic-search results")
 
-      ![Keyword search with no exact match](images/keyword-search-no-results.png "Keyword search with no exact match")
+  5. Compare the results. Semantic search finds related meaning; keyword search finds an exact phrase. Production retrieval can combine both approaches when exact project codes, contract terms, or other literal phrases matter.
 
 ## Task 5: Combine document evidence with structured context
 
 AI applications need more than a relevant document passage. They also need the project and asset context needed to interpret that passage and support a decision. The following query repeats the semantic ranking, selects the top three document chunks, and joins each result to the corresponding Gold project and asset context.
 
-1. Use the best semantic matches as document evidence and join them to Gold project context:
+1. In the SQL Worksheet, run:
 
     ```sql
     <copy>
@@ -232,12 +271,17 @@ AI applications need more than a relevant document passage. They also need the p
     ORDER BY r.semantic_distance;
     </copy>
     ```
-
-2. Review how each row combines structured project context (milestone, purchasing, and inspection status), engineering evidence (document, section, page, and text), and retrieval context (`SEMANTIC_DISTANCE`). This is an AI-ready retrieval pattern: an application can present a business answer alongside the document evidence that supports it.
-
     ![Governed project context with retrieved evidence](images/governed-context-results.png "Governed project context with retrieved evidence")
 
-3. Verify the provenance of the selected chunk:
+2. Review the results. Each row combines:
+
+    * structured project context: milestone, purchasing, and inspection status;
+    * engineering evidence: the matched document, section, page, and text;
+    * retrieval context: semantic distance.
+
+    This is an AI-ready retrieval pattern: an application can present a business answer alongside the document evidence that supports it.
+
+3. Verify the provenance of one selected document. Replace the placeholder below with the document name returned by your semantic-search result, then run the query:
 
     ```sql
     <copy>
@@ -254,39 +298,44 @@ AI applications need more than a relevant document passage. They also need the p
     </copy>
     ```
 
-  4. Replace the placeholder with the document name returned by your query. Confirm that the result can be traced to a specific source object and version. Review its extraction time, chunking policy, embedding model, and classification; provenance lets an application or reviewer verify where retrieved evidence came from, which version was used, and how it was prepared.
+    ![Document provenance](images/document-provenance.png "Document provenance")
 
-      ![Document provenance](images/document-provenance.png "Document provenance")
+  4. Confirm that the document evidence can be traced to a specific Object Storage object and version. Review its extraction time, chunking policy, embedding model, and classification. Provenance allows an application or reviewer to verify where retrieved evidence came from, which version was used, and how it was prepared.
 
 ## Lab 2 Recap
 
 In this lab, you:
 
-- Used Data Studio Catalog to explore application-ready products and document metadata.
-- Compared relational, JSON, relationship-projection, and vector representations.
-- Reviewed the prebuilt document-processing pipeline.
-- Retrieved Austin engineering evidence by semantic meaning.
-- Combined the evidence with structured project context and provenance.
+* Inspected the Gold consumer-ready data sets that applications and agents can consume directly.
+* Compared relational facts, JSON attributes, and relationship projections without creating separate copies of governed data.
+* Reviewed how documents are registered, chunked, enriched with metadata, embedded, and indexed.
+* Retrieved Austin engineering evidence by semantic meaning and compared it with keyword retrieval.
+* Combined retrieved document evidence with Gold project context.
+* Verified that the retrieved evidence can be traced to a governed Object Storage object and version.
 
-The key takeaway is that structured facts and unstructured evidence can remain governed together. Applications and agents can retrieve richer context without sending sensitive project material to an unrelated external data store.
+The key takeaway: AI applications can retrieve trusted document evidence and ground it in business context without separating sensitive project material from its governance, quality controls, and provenance.
 
 ## Labs 1–2 Wrap-Up: From Governed Data to AI-Ready Context
 
-In Labs 1 and 2, you followed the path from enterprise source data to trusted context for an AI application. In Lab 1, you linked raw source data in Object Storage, preserved it as Bronze evidence, standardized it into Silver-style business entities, and examined Gold data products designed for consumers. You also saw how quality rules, quarantine, and lineage make those products trustworthy.
-
+In Labs 1 and 2, you followed the path from enterprise source data to trusted context for an AI application.
+In Lab 1, you linked raw source data in Object Storage, preserved it as Bronze evidence, standardized it into Silver-style business entities, and examined Gold consumer-ready data sets designed for consumers. You also saw how quality rules, quarantine, and lineage make those consumer-ready data sets trustworthy.
 In Lab 2, you extended that foundation with governed document evidence. You reviewed how documents are cataloged, chunked, enriched with metadata, embedded, and searched by meaning. You then combined retrieved engineering evidence with Gold project context and traced the result back to its source object and version.
+The result is an AI-ready data foundation:
 
-`Enterprise sources and documents` → governed Bronze evidence → standardized Silver entities → Gold business products and searchable document context → applications and agents with explainable answers
+    `Enterprise sources and documents` → `governed Bronze evidence` → `standardized Silver entities` → `Gold business consumer-ready data sets and searchable document context` → `applications and agents with explainable answers`
 
 ### Data Transforms: Productionizing the Pattern
 
-In this workshop, you used Data Studio and SQL to make each step visible. In production, ALH Data Transforms can package these same patterns into reusable visual data flows and workflows. A flow can define sources, mappings, expressions, validations, and target writes. A workflow can schedule and monitor flows, manage dependencies, and record operational outcomes.
+In this workshop, you used Data Studio and SQL to make each step visible. For example, you linked a Bronze external table, created a standardized supplier view, and queried prepared document chunks and vector-search results.
+In production, **ALH Data Transforms** can package these same patterns into reusable visual data flows and workflows. A flow can define sources, mappings, expressions, validations, and target writes. A workflow can schedule and monitor those flows, manage dependencies, and record operational outcomes.
+
+    `Source extracts and documents` → `Data Transforms or SQL pipelines` → `Bronze, Silver, and Gold outputs` → `quality checks, quarantine, lineage, and monitoring` → `trusted products for applications and agents`
 
 Use SQL when a rule is concise and easy to express directly. Use Data Transforms when a team needs a visual, repeatable, scheduled, and monitored pipeline. Many production implementations use both.
 
 ### Optional Take-Home: Lab 3
 
-Lab 3 is an optional readiness review. It examines the operational and governance evidence behind a data product: pipeline runs, quality and freshness checks, published contracts, consumer mappings, and the final AI-readiness assessment. Its key question is: “Is this Gold product not only useful, but safe and reliable to hand to developers and AI agents?”
+Lab 3 is an optional readiness review. It examines the operational and governance evidence behind a consumer-ready data sets: pipeline runs, quality and freshness checks, published contracts, consumer mappings, and the final AI-readiness assessment. Its key question is: “Is this Gold consumer-ready data set not only useful, but safe and reliable to hand to developers and AI agents?”
 
 ## Learn More
 

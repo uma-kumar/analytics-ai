@@ -8,6 +8,8 @@ To unify this estate, Seer uses Oracle Autonomous AI Lakehouse (ALH) as a shared
 
 The workshop environment is pre-provisioned so you can focus on the design decisions and outcomes instead of waiting for a complete medallion build. The seeded transformations in this workshop were implemented with ALH-native SQL, Data Studio, Data Transforms, and database jobs. AIDP notebooks did not execute these transformations. You will still build part of the flow yourself: Data Studio will link a supplier CSV in Object Storage as your Bronze external table, and SQL will standardize it into your Silver demonstration view.
 
+In this workshop, a consumer-ready data set is prepared, trusted data designed for an application, AI agent, or business user. This is sometimes called a _data product_; it is not a commercial product.
+
 **Estimated Time:** 5 minutes
 
 ### Objectives
