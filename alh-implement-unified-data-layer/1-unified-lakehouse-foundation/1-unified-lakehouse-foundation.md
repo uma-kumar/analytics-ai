@@ -407,7 +407,7 @@ This task has three parts:
 -  Review the Gold project context used for business decisions.
 
 
-1.  Run the following query to locate the source-system records associated with the Austin steel delivery:
+1. Run the following query to locate the source-system records associated with the Austin steel delivery:
 
     ```sql
     <copy>
