@@ -190,9 +190,9 @@ The workshop setup uploaded representative source extracts to a private Object S
 
 17. Return to the Database Actions Launchpad, select **SQL** under **Development** to open the SQL Worksheet, and review the broader seeded source inventory.
 
-   ![return to sql](images/return-to-sql.png)
+    ![return to sql](images/return-to-sql.png)
 
-   The next query serves a different purpose. It does **not** read `SUPPLIER_TRANSFORM_EXT` or the eight supplier records. Instead, it reads `seer_bronze.source_record_inventory`, a separate workshop table that acts as an inventory of the staged source files. Each row describes a source file—for example, its originating system, file name, format, record count, extraction time, and ingestion batch. This places the one supplier-file example you just queried in the context of the wider Bronze layer. Paste the following read-only query, and select **Run**:
+    The next query serves a different purpose. It does **not** read `SUPPLIER_TRANSFORM_EXT` or the eight supplier records. Instead, it reads `seer_bronze.source_record_inventory`, a separate workshop table that acts as an inventory of the staged source files. Each row describes a source file—for example, its originating system, file name, format, record count, extraction time, and ingestion batch. This places the one supplier-file example you just queried in the context of the wider Bronze layer. Paste the following read-only query, and select **Run**:
 
     ```sql
     <copy>
@@ -279,9 +279,9 @@ In this task, you will apply a small but realistic Silver-layer transformation t
 You will use SQL in Autonomous AI Lakehouse to create `SUPPLIER_STANDARDIZED_DEMO`, a view that presents those raw records in a consistent business format. The view does not copy the CSV; it saves the transformation logic and applies it when queried. You will then compare your result with the workshop’s prebuilt Silver reference mapping.
 This task has three parts:
 
-1. Define the transformation rules that standardize the raw Bronze supplier records.
-2. Query the view to see the standardized Silver-style result.
-3. Compare the result with the workshop’s seeded Silver reference mapping to validate the transformation."
+-  Define the transformation rules that standardize the raw Bronze supplier records.
+-  Query the view to see the standardized Silver-style result.
+-  Compare the result with the workshop’s seeded Silver reference mapping to validate the transformation."
 
 `SUPPLIER_TRANSFORM_EXT` is the Bronze external table that reads the raw supplier CSV directly from Object Storage. Its records intentionally contain source-specific differences, such as name abbreviations, inconsistent capitalization, status codes, location formats, and missing certifications.
 
@@ -398,18 +398,16 @@ You will use SQL in Autonomous AI Lakehouse to create `SUPPLIER_STANDARDIZED_DEM
 ## Task 5: Trace the Austin steel-delivery event
 
 In this task, you will trace one real-world business event—the reinforced-steel delivery for Seer’s Austin bank project—across the systems that recorded it.
-Each source system captured a different part of the same delivery: CRM identifies the supplier, Fusion ERP records the purchase order and financial status, Primavera records the project milestone, and the on-premises inspection system records the receiving inspection. The lakehouse maps those source records to one canonical event, then presents the result as a consumer-ready Gold record.
+Each source system captured a different part of the same delivery: CRM identifies the supplier, Fusion ERP records the purchase order and financial status, Primavera records the project milestone, and the on-premises inspection system records the receiving inspection. The lakehouse maps those source records to one canonical event, then presents the result as a consumer-ready Gold record. No data is changed in this task
 
 This task has three parts:
 
-1. Identify the source records mapped to the shared Austin steel-delivery event.
-2. Review the standardized Silver event created from those records.
-3. Review the Gold project context used for business decisions.
+-  Identify the source records mapped to the shared Austin steel-delivery event.
+-  Review the standardized Silver event created from those records.
+-  Review the Gold project context used for business decisions.
 
 
-No data is changed in this task
-
-1. Run the following query to locate the source-system records associated with the Austin steel delivery:
+1.  Run the following query to locate the source-system records associated with the Austin steel delivery:
 
     ```sql
     <copy>
@@ -496,17 +494,14 @@ No data is changed in this task
 
 ## Task 6: Review quality and lineage evidence
 
-Trusted data requires evidence that it meets defined quality rules and can be traced back to its source. In this task, you will review that evidence for the workshop data.
+Trusted data requires evidence that it meets defined quality rules and can be traced back to its source. In this task, you will review that evidence for the workshop data. No data is changed in this task.
 
 You will:
 
-1. Review quality-rule results across the Bronze, Silver, and Gold layers.
-2. Review records placed in quarantine for follow-up.
-3. Trace your supplier-standardization view from Object Storage through its Bronze external table.
-4. Review the recorded pipeline lineage for the seeded Gold project-context product.
-
-
-No data is changed in this task.
+-  Review quality-rule results across the Bronze, Silver, and Gold layers.
+-  Review records placed in quarantine for follow-up.
+-  Trace your supplier-standardization view from Object Storage through its Bronze external table.
+-  Review the recorded pipeline lineage for the seeded Gold project-context product.
 
 1. Review the latest quality-rule results. In the SQL worksheet, run:
 
