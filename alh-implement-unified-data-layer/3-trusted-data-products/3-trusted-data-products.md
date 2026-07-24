@@ -1,4 +1,4 @@
-# Lab 3: Deliver Trusted Data Products
+# Lab 3: Deliver Trusted Consumer Ready Data Sets
 
 ## Introduction
 
@@ -14,7 +14,7 @@ In this lab, you will:
 
 - Understand where ALH Data Transforms workflows and database jobs fit, and inspect the seeded evidence that represents their pipeline outcomes.
 - Validate quality, freshness, and document coverage.
-- Review published data-product contracts.
+- Review published data-data-set contracts.
 - Map Gold products to developer and agent consumers.
 - Complete an application and agent-readiness assessment.
 
@@ -81,7 +81,7 @@ ALH can implement transformation logic with SQL, visual Data Transforms data flo
 
 > **Where AIDP fits:** An AIDP implementation would expose notebook jobs and AIDP workflow runs instead. The operational responsibilities remain similar, but the execution engine and monitoring surface differ. This workshop inspects ALH-native execution because the transformations and target products are contained in ALH.
 
-## Task 2: Validate the Gold products
+## Task 2: Validate the Gold consumer ready data sets
 
 1. Check stable business keys and duplicates:
 
@@ -134,11 +134,11 @@ ALH can implement transformation logic with SQL, visual Data Transforms data flo
 
 4. Confirm that all required checks pass or have an explained exception. A result should not be labeled agent-ready merely because a query returns rows.
 
-## Task 3: Review the published contracts
+## Task 3: Review the published data-set contracts
 
 1. In the Data Studio left pane, select **Catalog**. Select the `LOCAL` schema selector, choose `SEER_GOLD`, select **Apply**, and open `DATA_PRODUCT_CATALOG`.
 
-2. Select **Preview** and review each product's business purpose, accountable owner, classification, refresh frequency, quality status, and contract version.
+2. Select **Preview** and review each consumer-ready data set's business purpose, accountable owner, classification, refresh frequency, quality status, and contract version.
 
 3. Return to the Catalog results and open `SEER_GOLD.PROJECT_CONTEXT`. Use **Columns** to inspect its columns and data types, and use **Lineage** to review any dependencies available for the object.
 
@@ -168,7 +168,7 @@ ALH can implement transformation logic with SQL, visual Data Transforms data flo
 
 6. Cataloging makes a product discoverable. A contract makes it safe to depend on.
 
-## Task 4: Map products to downstream consumers
+## Task 4: Map consumer-ready data sets to downstream consumers
 
 The next workshops begin where this one ends.
 
@@ -207,7 +207,7 @@ The next workshops begin where this one ends.
 
 ## Task 5: Complete the readiness assessment
 
-Use the following checklist for each product intended for an AI application or agent.
+Use the following checklist for each consumer-ready data set intended for an AI application or agent.
 
 | Readiness question | Evidence to review |
 | --- | --- |
@@ -249,7 +249,7 @@ In this lab, you:
 
 - Reviewed where ALH Data Transforms and database jobs fit, then inspected the workshop pipeline-audit records that represent their outcomes.
 - Validated business keys, freshness, quality, and document coverage.
-- Used Data Studio Catalog to review product ownership, classifications, schema details, and contract versions.
+- Used Data Studio Catalog to review data-set ownership, classifications, schema details, and contract versions.
 - Mapped Gold products to developer interfaces and agent tools.
 - Completed an application and agent-readiness assessment.
 
