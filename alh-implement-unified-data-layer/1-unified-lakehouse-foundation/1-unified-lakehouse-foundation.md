@@ -395,7 +395,7 @@ You will use SQL in Autonomous AI Lakehouse to create `SUPPLIER_STANDARDIZED_DEM
 
 > **ALH Data Transforms alternative:** This lab uses SQL because the rules are concise and easy to validate. ALH Data Transforms can represent the same pattern visually using source, expression, mapping, validation, and target components. It also supports reusable connections, workflows, scheduling, and job monitoring. Production pipelines can use SQL, Data Transforms, or both, depending on the transformation.
 
-## Task 5: Trace the Austin steel-delivery event
+## Task 5 (Optional): Trace the Austin steel-delivery event
 
 In this task, you will trace one real-world business event—the reinforced-steel delivery for Seer’s Austin bank project—across the systems that recorded it.
 Each source system captured a different part of the same delivery: CRM identifies the supplier, Fusion ERP records the purchase order and financial status, Primavera records the project milestone, and the on-premises inspection system records the receiving inspection. The lakehouse maps those source records to one canonical event, then presents the result as a consumer-ready Gold record. No data is changed in this task
@@ -492,7 +492,7 @@ This task has three parts:
 
     The Gold record does not erase source differences. It resolves them into a trusted business object while preserving the Silver mappings needed to trace and explain the result.
 
-## Task 6: Review quality and lineage evidence
+## Task 6 (Optional): Review quality and lineage evidence
 
 Trusted data requires evidence that it meets defined quality rules and can be traced back to its source. In this task, you will review that evidence for the workshop data. No data is changed in this task.
 

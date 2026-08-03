@@ -63,7 +63,7 @@ Applications and agents should consume stable, business-oriented data products r
 
     ![supplier recs](images/preview-supplier-recommendations.png)
 
-## Task 2: Compare the data shapes
+## Task 2 (Optional): Compare the data shapes
 
 The same governed business data can be exposed through different data shapes without creating separate, unsynchronized copies. In this task, you will inspect relational facts, flexible JSON attributes, and entity relationships.
 
