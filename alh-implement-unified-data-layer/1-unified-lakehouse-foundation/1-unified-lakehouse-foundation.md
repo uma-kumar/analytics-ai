@@ -116,10 +116,27 @@ The workshop setup uploaded representative source extracts to a private Object S
 
 4. On **Storage Settings**, configure the cloud store location:
 
-    - **Description:** Private storage location for the workshop's sample source files used to create the Bronze external table.
+    - **Name:** 
+    ```
+    <copy>
+    SEER_LAKE_SOURCE
+    </copy>
+    ```
 
-    - **Name:** `SEER_LAKE_SOURCE`
+    - **Description:** 
+    ```
+    <copy>
+    Private storage location for the workshop's sample source files used to create the Bronze external table.
+    </copy>
+    ```
+
     - **Select Credential:** Keep the preselected `OCI$RESOURCE_PRINCIPAL` credential for the connected user.
+    ```
+    <copy>
+    OCI$RESOURCE_PRINCIPAL
+    </copy>
+    ```
+    
     - **Bucket URI:** Copy **Bucket URI** from **View Login Info** on lab page. It should be under `object_storage_base_uri` value from the Terraform outputs, for example `https://objectstorage.us-ashburn-1.oraclecloud.com/n/<namespace>/b/<bucket-name>/o/`.
 
     ![Grab Bucket URL](images/bucket-uri.png)
@@ -141,17 +158,17 @@ The workshop setup uploaded representative source extracts to a private Object S
 
     ![Select the supplier CSV](images/select-supplier-csv.png "Select the supplier CSV")
 
-8. On the file card, select the **Settings** pencil icon and configure the link:
+8. On the file card, select the **Settings** pencil icon to configure the link. You only need to update the **Table Name** and **Validation Type** fields. Confirm that all other settings match the screenshot below.
 
-    - **Option:** Create External Table
-    - **Table name:** `SUPPLIER_TRANSFORM_EXT`
-    - **Validation Type:** Full
-    - **Partition column:** None
-    - **Encoding:** AL32UTF8 - Unicode UTF-8 encoding scheme
-    - **Text enclosure:** Double quote
-    - **Field delimiter:** Comma
-    - **Column header row:** Selected, row `1`
-    - **Start processing data at row:** `2` (set automatically when the header row is selected)
+    * **Option:** Create External Table
+    * **Table Name:** `SUPPLIER_TRANSFORM_EXT`
+    * **Validation Type:** Full
+    * **Partition Column:** None
+    * **Encoding:** AL32UTF8 — Unicode UTF-8 encoding scheme
+    * **Text Enclosure:** Double quote (")
+    * **Field Delimiter:** Comma
+    * **Column Header Row:** Select this option and set the row to 1.
+    * **Start Processing Data at Row:** 2 (set automatically when the header row is selected)
 
     ![Edit File Card](images/edit-link.png)
     ![Edit File Card](images/file-card.png)
@@ -217,46 +234,76 @@ The medallion layers answer different questions.
 
 **Table 1. Bronze, Silver, and Gold: Purpose and Controls**
 
+The medallion layers answer different questions about the same business domain. Bronze preserves incoming records as supplied, including their source context. Silver applies rules that determine when multiple records refer to the same real-world entity, then standardizes the resulting entity and summarizes its provenance. Gold packages those trusted entities into stable, consumer-ready datasets.
+In this task, you will use the Catalog to inspect representative datasets in each layer and follow that progression from source context to conformed entities to business-ready data.
+
+
 | Layer | Primary question | Typical controls |
 | --- | --- | --- |
-| Bronze | What arrived from the source? | Provenance, ingestion time, raw payload retention |
+| Bronze | What arrived from the source? | Provenance, ingestion time, source format, raw-payload retention |
 | Silver | What enterprise entity does it represent? | Standardization, validation, deduplication, reconciliation |
 | Gold | What trusted, consumer-ready data set does a consumer need? | Business definitions, stable schema, quality and freshness expectations |
 
-1. Return to the Database Actions Launchpad, select **Catalog** under **Data Studio**.
+1. Right click the SQL worksheet tab and select **Duplicate** so you have two tabs. On the second tab, select **Catalog** under **Data Studio**
 
+    ![duplicate](images/duplicate.png)
     ![select catalog](images/select-catalog.png)
 
-2. Confirm that `LOCAL` is the selected catalog. Select the `LOCAL` schema selector, remove the current schema, select `SEER_BRONZE`, and select **Apply**. Search for `SOURCE_RECORD_INVENTORY`.
+2. Confirm that **LOCAL** is the selected catalog. Open the schema selector, remove the current schema if needed, select `SEER_BRONZE`, and select **Apply**. Search for `SOURCE_RECORD_INVENTORY`.
 
     ![search bronze schema](images/select-local.png)
     ![search bronze schema](images/search-bronze-schema.png)
 
-3. Open `SEER_BRONZE.SOURCE_RECORD_INVENTORY`. This table represents the Bronze-layer inventory of source files that arrived in the lakehouse. Use the available entity-detail tabs to:
+3. Open `SEER_BRONZE.SOURCE_RECORD_INVENTORY`. Use the entity-detail tabs to:
 
-    - Preview the source inventory rows.
-    - Inspect the columns and data types.
-    - Review statistics when available.
-    - Locate the source object, storage format, extraction time, and ingestion batch metadata.
+    * Select **Preview** to inspect the inventory rows.
+    * Review the columns and data types.
+    * Review statistics when available.
+    * Locate the source object, storage format, extraction time, and ingestion-batch metadata.
 
-    Bronze preserves the original source context and answers: "What arrived, and where did it come from?"
+    This table is an inventory of source data that arrived in the lakehouse. Each row identifies a source dataset, where it came from, its format, and the number of records it contains. It answers: **“What arrived, and where did it come from?”**
+    Bronze preserves source context and traceability. It is intentionally close to the incoming data and is not yet the stable, standardized dataset that downstream consumers should use.
 
     ![open source record inventory](images/open-source-record.png)
     ![preview source record inventory](images/preview-source-data.png)
 
-4. Select **Close** to exit the `SOURCE_RECORD_INVENTORY` table view and return to the **Catalog** page. In the **LOCAL** schema selector, replace `SEER_BRONZE` with `SEER_SILVER`, then select **Apply**. Search for **ASSETS** and open `SEER_SILVER.ASSETS`. Select **Preview**, then locate `CANONICAL_ASSET_NAME`, `NORMALIZED_STATUS`, `SOURCE_SYSTEM_COUNT`, and `RECONCILIATION_STATUS`.
+4. Select **Close** to return to the Catalog. In the schema selector, replace `SEER_BRONZE` with `SEER_SILVER`, then select Apply. Search for and open `ASSETS`, then select Preview. `SEER_SILVER.ASSETS` contains one conformed row for each business asset rather than one row for every incoming source record. Review these columns:
+
+    * `ASSET_ID` — the standardized identifier for the asset.
+    * `CANONICAL_ASSET_NAME` — the approved, consistent name used across the business.
+    * `PROJECT_ID` — the associated project identifier.
+    * `ASSET_TYPE` — the normalized asset category.
+    * `NORMALIZED_STATUS` — the standardized lifecycle or operational status.
+    * `SOURCE_SYSTEM_COUNT` — the number of source systems that contributed evidence for the asset.
+    * `RECONCILIATION_STATUS` — the outcome of the matching and reconciliation process.
+
+    Silver applies the “these records refer to the same asset” rules, then produces a standardized business entity. The canonical name, normalized status, source-system count, and reconciliation status are transformation outputs; they are not necessarily fields copied directly from a source CSV.
 
     ![search bronze schema](images/select-local.png)
     ![search silver schema](images/search-silver-schema.png)
     ![search bronze schema](images/choose-assets.png)
     ![search bronze schema](images/preview-assets.png)
 
-5. Select **Close** to exit the `ASSETS` table view and return to the **Catalog** page. Search for and open `SEER_SILVER.SUPPLIERS`. Select **Preview** and review the standardized supplier names, qualification statuses, compliance statuses, and matched-source counts. This is another Silver example: it resolves differences between source systems into one conformed supplier entity that the business can use consistently
+5. Select **Close** to return to the Catalog. Search for and open `SEER_SILVER.SUPPLIERS`, then select **Preview**. Review the standardized supplier names, qualification statuses, compliance statuses, and matched-source counts. This is another Silver example. The transformation resolves differing source representations into one conformed supplier entity that the business can use consistently:
+
+    * `SUPPLIER_ID` identifies the standardized supplier.
+    * `CANONICAL_SUPPLIER_NAME` provides a consistent business name.
+    * `QUALIFICATION_STATUS` and `COMPLIANCE_STATUS` standardize business assessments.
+    * `MATCHED_SOURCE_COUNT` indicates how many source records contributed to the conformed supplier.
 
     ![select suppliers](images/select-suppliers.png)
     ![preview suppliers](images/preview-suppliers.png)
 
-6. Select **Close** to exit the `SUPPLIERS` table view and return to the **Catalog** page. In the **LOCAL** schema selector, replace `SEER_SILVER` with `SEER_GOLD`, then select **Apply**. Search for `PROJECT_CONTEXT` and open `SEER_GOLD.PROJECT_CONTEXT`. Select **Preview**, inspect its columns, and locate the project, asset, milestone, committed cost, inspection, supplier, and freshness fields. This Gold table is a consumer-ready product: it brings together the business context needed for project analysis without requiring users to interpret each raw source system.
+6. Select **Close** to return to the Catalog. In the schema selector, replace `SEER_SILVER` with `SEER_GOLD`, then select **Apply**. Search for and open `PROJECT_CONTEXT`, then select **Preview**. `SEER_GOLD.PROJECT_CONTEXT` is a consumer-ready data product that combines related, conformed information into one project-level view. Rather than requiring a consumer to separately find an asset, its project status, milestone, supplier information, inspections, and cost data, the Gold transformation assembles that context into a single record for each project. The dataset draws on standardized Silver-layer entities and curated operational records, using shared business identifiers—such as project and asset IDs—to relate them. It brings together fields such as:
+
+    * project and asset identity;
+    * the current project milestone;
+    * committed cost;
+    * inspection information;
+    * supplier context; and
+    * freshness or update information.
+
+    Inspect the columns to see how the Gold layer presents this integrated business context in a stable, easy-to-consume format. Unlike Bronze, which preserves the incoming source shape, and Silver, which standardizes individual entities, Gold is organized around a consumer need: **“What is the current context for this project?”** Reports, applications, and AI experiences can use this table without having to interpret or join the underlying source-system data themselves.
 
     ![search bronze schema](images/select-local.png)
     ![search gold schema](images/select-gold-schema.png)
@@ -265,29 +312,30 @@ The medallion layers answer different questions.
 
 7. Compare the three layers:
 
-    - **Bronze** preserves what arrived and its source context.
-    - **Silver** standardizes and reconciles source records into trusted enterprise entities.
-    - **Gold** provides stable, business-focused consumer-ready data sets for reports, applications, and AI use cases.
+    * **Bronze** preserves what arrived and where it came from. It retains source-shaped records and ingestion context.
+    * **Silver** applies the “these records refer to the same asset or supplier” rules, standardizes names, types, and statuses, and summarizes provenance.
+    * **Gold** provides stable, business-focused, consumer-ready datasets for reports, applications, and AI use cases.
 
-    Provenance remains available, but Gold consumers no longer need to understand every source-system field or file format.
-    In the next task, you will apply this pattern by transforming the Bronze supplier records you linked earlier into a standardized Silver view using SQL in ALH.
+    Provenance remains available throughout the lakehouse. However, Gold consumers no longer need to understand every source-system field or file format. In the next task, you will apply this pattern by transforming the Bronze supplier data linked earlier into a standardized Silver view using SQL in ALH.
 
-## Task 4: Run an ALH-native Bronze-to-Silver transformation
 
-In this task, you will apply a small but realistic Silver-layer transformation to the supplier CSV you linked earlier. `SUPPLIER_TRANSFORM_EXT` is the Bronze external table that reads the raw supplier CSV directly from Object Storage. Its records intentionally contain source-specific differences, such as name abbreviations, inconsistent capitalization, status codes, location formats, and missing certifications.
+## Task 4: Run a Bronze-to-Silver supplier transformation
 
-You will use SQL in Autonomous AI Lakehouse to create `SUPPLIER_STANDARDIZED_DEMO`, a view that presents those raw records in a consistent business format. The view does not copy the CSV; it saves the transformation logic and applies it when queried. You will then compare your result with the workshop’s prebuilt Silver reference mapping.
-This task has three parts:
+In this task, you will write a SQL transformation that converts raw supplier records into a consistent Silver-style representation.
+You will read from `SUPPLIER_TRANSFORM_EXT`, the external table created in Task 2. Because it is an external table, Oracle reads the linked CSV from Object Storage when you query it; this task does not copy the CSV into a new table.
+The source records intentionally contain differences that commonly occur across systems:
 
--  Define the transformation rules that standardize the raw Bronze supplier records.
--  Query the view to see the standardized Silver-style result.
--  Compare the result with the workshop’s seeded Silver reference mapping to validate the transformation."
+* supplier-name abbreviations and inconsistent capitalization;
+* different status codes for the same business meaning;
+* missing or differently formatted certifications; and
+* location values expressed in different formats.
 
-`SUPPLIER_TRANSFORM_EXT` is the Bronze external table that reads the raw supplier CSV directly from Object Storage. Its records intentionally contain source-specific differences, such as name abbreviations, inconsistent capitalization, status codes, location formats, and missing certifications.
+You will create `SUPPLIER_STANDARDIZED_DEMO`, a view in your connected schema. A view stores the transformation logic, not a separate copy of the data: whenever you query it, Oracle reads the linked source and applies the standardization rules.
 
-You will use SQL in Autonomous AI Lakehouse to create `SUPPLIER_STANDARDIZED_DEMO`, a view that presents those raw records in a consistent business format. The view does not copy the CSV; it saves the transformation logic and applies it when queried. You will then compare your result with the workshop’s prebuilt Silver reference mapping.
+>**Before you begin:** Confirm that Task 2 created the external table named `SUPPLIER_TRANSFORM_EXT` in your connected schema. Use this table name consistently in every query below.
+>**Important:** This exercise standardizes each source record. It does not yet merge multiple source rows into one supplier record. Production Silver pipelines can also perform entity matching, survivorship, validation, and quarantine processing.
 
-1. Return to the Database Actions Launchpad, select **SQL** under **Development** to open the SQL Worksheet and run the following query to inspect the raw Bronze supplier records:
+1. Switch tab to the SQL Worksheet tab you had previously used. Run the following query:
 
     ```sql
     <copy>
@@ -303,14 +351,14 @@ You will use SQL in Autonomous AI Lakehouse to create `SUPPLIER_STANDARDIZED_DEM
     </copy>
     ```
 
-    ![return to sql](images/return-to-sql.png)
+    ![return to sql](images/sql-tab.png)
     ![sql](images/sql-bronze.png)
 
-2. Review the results. Notice differences such as extra spaces, abbreviations, inconsistent capitalization, multiple status codes, different location formats, and missing certifications. Bronze preserves these values as they arrived from the source systems.
+2. Review the eight returned records. Notice examples of source-specific variation, such as abbreviated supplier names, inconsistent capitalization, different status values, locations expressed as `Austin, Texas` or `Austin, TX`, and missing certifications. Bronze preserves these values as they arrived from the source systems. It does not alter them to make them consistent.
 
     ![Raw Bronze supplier records](images/raw-supplier-records.png "Raw Bronze supplier records")
 
-3. Run the following SQL to create `SUPPLIER_STANDARDIZED_DEMO`, a view in your connected schema:
+3. Run the following SQL:
 
     ```sql
     <copy>
@@ -347,9 +395,18 @@ You will use SQL in Autonomous AI Lakehouse to create `SUPPLIER_STANDARDIZED_DEM
     ```
     ![Create Supplier View](images/create-supplier-view.png)
 
-    This statement defines rules that standardize supplier names, qualification statuses, certifications, and locations. It creates a view—it does not copy or modify the raw Bronze CSV. The view also retains source-record, source-system, and ingestion-batch details for traceability
+    This statement creates a view named `SUPPLIER_STANDARDIZED_DEMO`.
+    The transformation:
 
-4. Query the standardized view:
+    * maps known name variants to one `CANONICAL_SUPPLIER_NAME`
+    * translates raw status values into a consistent `QUALIFICATION_STATUS`
+    * standardizes certification values and identifies missing certifications
+    * normalizes location text; and
+    * retains the source-system and ingestion-batch fields for traceability
+
+    The original linked CSV and the external table remain unchanged.
+
+4. Run:
 
     ```sql
     <copy>
@@ -358,12 +415,16 @@ You will use SQL in Autonomous AI Lakehouse to create `SUPPLIER_STANDARDIZED_DEM
     ORDER BY canonical_supplier_name, source_record_id;
     </copy>
     ```
+    Confirm that all eight source records are still present. The difference is that the displayed values are now standardized:
 
-    This query applies the transformation rules in the view and displays the standardized Silver-style result. Confirm that the eight records now use consistent supplier names, statuses, certifications, and location formats.
+    * name variations resolve to a canonical supplier name
+    * statuses use consistent business terms
+    * certifications use a common format or show `MISSING`
+    * locations use a consistent format.
 
     ![Standardized Silver-style supplier result](images/standardized-supplier-result.png "Standardized Silver-style supplier result")
 
-5. Compare your standardized result with the workshop's seeded Silver reference mapping:
+5. The workshop includes `SEER_SILVER.SUPPLIER_SOURCE_MAPPINGS`, which contains the expected standardized values for each source record. Run:
 
     ```sql
     <copy>
@@ -384,6 +445,8 @@ You will use SQL in Autonomous AI Lakehouse to create `SUPPLIER_STANDARDIZED_DEM
     ORDER BY demo.source_record_id;
     </copy>
     ```
+    Confirm that all eight rows return `MATCH`.
+    A `MATCH` means your view produced the expected standardized values for that source record. `SEER_SILVER.SUPPLIER_SOURCE_MAPPINGS` is used only as the workshop’s reference answer—it does not perform the transformation for you.
 
     ![Compare Silver](images/compare-silver.png)
 
@@ -391,9 +454,22 @@ You will use SQL in Autonomous AI Lakehouse to create `SUPPLIER_STANDARDIZED_DEM
 
     ![Supplier transformation validation](images/supplier-match-validation.png "Supplier transformation validation")
 
-7. This exercise standardizes individual source records, which is one part of creating Silver data. A production Silver pipeline also performs cross-source entity matching, survivorship, validation, and quarantine of problem records. Catalog lineage provides the connection back to the source file and Object Storage path.
+7. This exercise standardizes individual source records, which is one part of creating Silver data. A production Silver pipeline also performs cross-source entity matching, survivorship, validation, and quarantine of problem records. Catalog lineage provides the connection back to the source file and Object Storage path. Return to your **Catalog** tab you had previously used. In the **LOCAL** schema selector, choose the schema returned by `SELECT USER` in Task 1—**ADMIN** in this workshop session—then select **Apply**.
 
-> **ALH Data Transforms alternative:** This lab uses SQL because the rules are concise and easy to validate. ALH Data Transforms can represent the same pattern visually using source, expression, mapping, validation, and target components. It also supports reusable connections, workflows, scheduling, and job monitoring. Production pipelines can use SQL, Data Transforms, or both, depending on the transformation.
+    ![catalog](images/catalog-tab.png)
+    ![select local](images/select-local.png)
+    ![select admin](images/select-admin.png)
+
+4. In **Entity** type, include **View**. Search for `SUPPLIER_STANDARDIZED_DEMO`, open the view, and select **Lineage**. Confirm the visual chain: `Object Storage URI` → `cloud-store link` → `SUPPLIER_TRANSFORM_EXT` → `SUPPLIER_STANDARDIZED_DEMO`. This proves that your view from Task 4 is not an isolated result: it can be traced through the Bronze external table to the original Object Storage file. This lineage supports impact analysis and helps users explain where a standardized supplier value came from.
+
+    ![Select view](images/select-view.png)
+    ![Supplier view lineage](images/supplier-view-lineage.png "Supplier view lineage")
+
+    **What you accomplished**
+    You used SQL in Autonomous AI Lakehouse to turn source-shaped supplier data into a consistent Silver-style representation while retaining its source lineage.
+    In Task 3, you saw that the Silver layer can reconcile several records into one trusted enterprise entity. This exercise demonstrates an earlier part of that process: standardizing individual source records so they are ready for matching, validation, and further Silver-layer processing.
+
+    > **ALH Data Transforms alternative:** This lab uses SQL because the rules are concise and easy to validate. ALH Data Transforms can represent the same pattern visually using source, expression, mapping, validation, and target components. It also supports reusable connections, workflows, scheduling, and job monitoring. Production pipelines can use SQL, Data Transforms, or both, depending on the transformation.
 
 ## Task 5 (Optional): Trace the Austin steel-delivery event
 
@@ -407,7 +483,7 @@ This task has three parts:
 -  Review the Gold project context used for business decisions.
 
 
-1. Run the following query to locate the source-system records associated with the Austin steel delivery:
+1. Return to your SQL Worksheet tab. Run the following query to locate the source-system records associated with the Austin steel delivery:
 
     ```sql
     <copy>
@@ -424,7 +500,7 @@ This task has three parts:
     ORDER BY source_system, source_object;
     </copy>
     ```
-
+    ![Austin Steel](images/sql-tab.png)
     ![Austin Steel](images/austin-steel.png)
 
 2. Review the results. The query returns one mapping row for each source record associated with this event, including financial, schedule, supplier, and inspection context. Although the source records have different IDs and descriptions, they share the same `CANONICAL_EVENT_ID`. `MATCH_METHOD` identifies how the pipeline associated a source record with the canonical event, and `MATCH_CONFIDENCE` indicates the confidence of that association. These mappings preserve the technical evidence needed to explain how the event was assembled
@@ -541,9 +617,9 @@ You will:
 
     ![Quarantined-record evidence](images/quarantined-records.png "Quarantined-record evidence")
 
-3. Return to **Data Studio** > **Catalog**. In the **LOCAL** schema selector, choose the schema returned by `SELECT USER` in Task 1—**ADMIN** in this workshop session—then select **Apply**.
+3. Return to your Catalog tab. In the **LOCAL** schema selector, choose the schema returned by `SELECT USER` in Task 1—**ADMIN** in this workshop session—then select **Apply**.
 
-    ![catalog](images/select-catalog.png)
+    ![catalog](images/catalog-tab.png)
     ![select local](images/select-local.png)
     ![select admin](images/select-admin.png)
 
