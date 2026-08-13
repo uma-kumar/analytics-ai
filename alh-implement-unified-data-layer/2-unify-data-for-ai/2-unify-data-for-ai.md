@@ -284,7 +284,15 @@ A relevant document passage is useful, but it does not tell the whole business s
 
     In other words, the query answers: _Which specification passages are relevant, and what is the current status of the project and asset they relate to?_
 
-3. Verify the source of one returned document. Replace the placeholder in the following query with a `DOCUMENT_NAME` from your results, then run it.
+3. Verify the source of one returned document.
+
+    Choose one of the following documents:
+
+    * `austin_structural_engineering_specification.pdf`
+    * `atlas_supplier_framework_agreement.pdf`
+
+    Replace `<document name>` in the following query with your selected document name, then run it.
+
 
     ```sql
     <copy>

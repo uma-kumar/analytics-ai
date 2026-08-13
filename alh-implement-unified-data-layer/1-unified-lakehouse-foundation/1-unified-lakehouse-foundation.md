@@ -123,12 +123,7 @@ The workshop setup uploaded representative source extracts to a private Object S
     </copy>
     ```
 
-    - **Description:** 
-    ```
-    <copy>
-    Private storage location for the workshop's sample source files used to create the Bronze external table.
-    </copy>
-    ```
+    - **Description:** Private storage location for the workshop's sample source files used to create the Bronze external table.
 
     - **Select Credential:** Keep the preselected `OCI$RESOURCE_PRINCIPAL` credential for the connected user.
     ```
@@ -161,7 +156,12 @@ The workshop setup uploaded representative source extracts to a private Object S
 8. On the file card, select the **Settings** pencil icon to configure the link. You only need to update the **Table Name** and **Validation Type** fields. Confirm that all other settings match the screenshot below.
 
     * **Option:** Create External Table
-    * **Table Name:** `SUPPLIER_TRANSFORM_EXT`
+    * **Table Name:** 
+    ```
+    <copy>
+    SUPPLIER_TRANSFORM_EXT
+    </copy>
+    ```
     * **Validation Type:** Full
     * **Partition Column:** None
     * **Encoding:** AL32UTF8 — Unicode UTF-8 encoding scheme
